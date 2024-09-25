@@ -1,0 +1,42 @@
+{
+  "name": "veramo_custom_test",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@metamask/providers": "^17.2.0",
+    "@veramo/core": "file:../veramo/packages/core",
+    "@veramo/credential-jwt": "file:../veramo/packages/credential-jwt",
+    "@veramo/credential-w3c": "file:../veramo/packages/credential-w3c",
+    "@veramo/did-jwt": "file:../veramo/packages/did-jwt",
+    "@veramo/did-manager": "file:../veramo/packages/did-manager",
+    "@veramo/did-provider-ethr": "file:../veramo/packages/did-provider-ethr",
+    "@veramo/did-resolver": "file:../veramo/packages/did-resolver",
+    "@veramo/key-manager": "file:../veramo/packages/key-manager",
+    "@veramo/kms-web3": "file:../veramo/packages/kms-web3",
+    "did-resolver": "^4.1.0",
+    "ethers": "^6.13.2",
+    "ethr-did-resolver": "^10.1.10",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react-swc": "^3.5.0",
+    "eslint": "^9.9.0",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "globals": "^15.9.0",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^8.0.1",
+    "vite": "^5.4.1"
+  }
+}
