@@ -3,7 +3,7 @@ import { BrowserProvider } from 'ethers';
 import { MetaMaskInpageProvider } from "@metamask/providers";
 import { Web3KeyManagementSystem } from '@veramo/kms-web3';
 import { KeyManager } from '@veramo/key-manager';
-import { ManagedKeyInfo, IDIDManager, IResolver, createAgent, ICredentialPlugin, IDataStore, IKeyManager, TAgent } from '@veramo/core';
+import { ManagedKeyInfo, IDIDManager, IResolver, createAgent, ICredentialPlugin, IDataStore, IKeyManager, TAgent, VerifiableCredential, VerifiablePresentation } from '@veramo/core';
 import { DIDManager, MemoryDIDStore } from '@veramo/did-manager';
 import { MemoryKeyStore } from '@veramo/key-manager';
 import { EthrDIDProvider } from '@veramo/did-provider-ethr';
@@ -12,11 +12,18 @@ import { getResolver as getEthrDidResolver } from "ethr-did-resolver";
 import { Resolver } from 'did-resolver';
 import { CredentialPlugin } from '@veramo/credential-w3c';
 import { CredentialProviderJWT } from '@veramo/credential-jwt';
+import Dropdown from './Dropdown';
+import { CredentialProviderEIP712 } from '@veramo/credential-eip712';
+import { Buffer } from 'buffer';
+
 declare global {
   interface Window {
     ethereum?: MetaMaskInpageProvider
+    Buffer: typeof Buffer;
   }
 }
+
+window.Buffer = Buffer;
 
 type ConfiguredAgent = TAgent<IDIDManager & IResolver & ICredentialPlugin & IDataStore & IKeyManager>;
 
@@ -28,7 +35,11 @@ function App() {
   const [agent, setAgent] = useState<ConfiguredAgent | null>(null);
   const [inputSubject, setInputSubject] = useState('');
   const [selectedDid, setSelectedDid] = useState<string | null>(null);
-
+  const [verifiableCredential, setVerifiableCredential] = useState<VerifiableCredential | null>(null);
+  const [signatureType, setSignatureType] = useState<string>('');
+  const [credentialValidated, setCredentialValidated] = useState<string>("");
+  const [verifiablePresentation, setVerifiablePresentation] = useState<VerifiablePresentation | null>(null);
+  const [presentationValidated, setPresentationValidated] = useState<string>("");
   async function connectWallet() {
     if (typeof window.ethereum !== 'undefined') {
       try {
@@ -128,12 +139,12 @@ function App() {
           })),
         }),
         new CredentialPlugin({
-          issuers: [new CredentialProviderJWT()]
+          issuers: [new CredentialProviderJWT(), new CredentialProviderEIP712()]
         })
       ]
     });
     console.log("Agent created: ", veramoAgent);
-    
+
     setAgent(veramoAgent);
   }, [kms, setAgent]);
 
@@ -148,9 +159,14 @@ function App() {
     }
   }, [kms, createCustomAgent, agent, importDids]);
 
+  useEffect(() => {
+    if (selectedKey) {
+      getDidDocument();
+    }
+  }, [selectedKey]);
+
   async function handleAccountSelection(key: ManagedKeyInfo) {
     setSelectedKey(key);
-    getDidDocument();
 
     console.log("Changed account to: ", key);
   }
@@ -181,14 +197,44 @@ function App() {
           university: "UPC",
         },
       },
-      proofFormat: 'EthTypedDataSignature',
+      proofFormat: signatureType,
     });
-    console.log("Credential created: ", credential);
+    console.log("Credential created")
+    setVerifiableCredential(credential);
   }
 
+  async function validateCredential() {
+    if (!agent) {
+      throw new Error('Agent not initialized');
+    }
+
+    if (!verifiableCredential) {
+      throw new Error('No credential selected');
+    }
+
+    const result = await agent.verifyCredential({
+      credential: verifiableCredential,
+    });
+    console.log("Credential validated");
+    if (result.verified === true) {
+      setCredentialValidated("Credential is valid")
+    } else {
+      setCredentialValidated("Credential is not valid")
+    }
+  }
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputSubject(event.target.value);
+  };
+
+  const options = [
+    { value: 'EthTypedDataSignature', label: 'EthTypedDataSignature' },
+    { value: 'EthereumEip712Signature2021', label: 'EthereumEip712Signature2021' }
+  ]
+
+  const handleDropdownSelect = (option: { value: string; label: string }) => {
+    console.log('Selected option:', option);
+    setSignatureType(option.value);
   };
 
   async function getDidDocument() {
@@ -204,6 +250,54 @@ function App() {
 
     const didDocument = await agent.resolveDid({ didUrl: did });
     setSelectedDid(JSON.stringify(didDocument.didDocument, null, 2));
+  }
+
+  async function createVerifiablePresentation() {
+    if (!agent) {
+      throw new Error('Agent not initialized');
+    }
+
+    if (!selectedKey) {
+      throw new Error('No key selected');
+    }
+
+    if (!inputSubject) {
+      throw new Error('No input subject');
+    }
+
+    if (!verifiableCredential) {
+      throw new Error('No verifiable credential');
+    }
+    const did = `did:ethr:sepolia:${selectedKey.meta?.account.address}`;
+    const presentation = await agent.createVerifiablePresentation({
+      presentation: {
+        holder: did,
+        verifiableCredential: [verifiableCredential],
+      },
+      proofFormat: signatureType,
+    });
+    console.log("Presentation created");
+    setVerifiablePresentation(presentation);
+  }
+
+  async function validatePresentation() {
+    if (!agent) {
+      throw new Error('Agent not initialized');
+    }
+
+    if (!verifiablePresentation) {
+      throw new Error('No presentation selected');
+    }
+
+    const result = await agent.verifyPresentation({
+      presentation: verifiablePresentation,
+    });
+    console.log("Presentation validated: ", result);
+    if (result.verified === true) {
+      setPresentationValidated("Presentation is valid")
+    } else {
+      setPresentationValidated("Presentation is not valid")
+    }
   }
 
   return <>
@@ -236,10 +330,29 @@ function App() {
         onChange={handleInputChange}
         placeholder="Enter text here"
       />
+      <Dropdown
+        options={options}
+        onSelect={handleDropdownSelect}
+        placeholder="Choose signature type"
+      />
       <button onClick={issueCredential}>Issue Credential</button>
       <div style={{ marginBottom: '20px' }}></div>
-      
     </div>
+    <h3>Created Verifiable Credential</h3>
+    <div><pre>{<p>{JSON.stringify(verifiableCredential, null, 4)}</p>}</pre></div>
+
+    <button onClick={validateCredential}>Validate Credential</button>
+    <div style={{ marginBottom: '20px' }}></div>
+    <h3>Credential validation result</h3>
+    <div>{<h4>{credentialValidated}</h4>}</div>
+    <div style={{ marginBottom: '20px' }}></div>
+    <button onClick={createVerifiablePresentation}>Create Presentation</button>
+    <h3>Created Verifiable Presentation</h3>
+    <div><pre>{<p>{JSON.stringify(verifiablePresentation, null, 4)}</p>}</pre></div>
+    <button onClick={validatePresentation}>Validate Presentation</button>
+    <h3>Presentation validation result</h3>
+    <div>{<h4>{presentationValidated}</h4>}</div>
+    <div style={{ marginBottom: '20px' }}></div>
   </>
 
 }

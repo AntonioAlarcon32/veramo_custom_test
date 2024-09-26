@@ -12,6 +12,7 @@
   "dependencies": {
     "@metamask/providers": "^17.2.0",
     "@veramo/core": "file:../veramo/packages/core",
+    "@veramo/credential-eip712": "file:../veramo/packages/credential-eip712",
     "@veramo/credential-jwt": "file:../veramo/packages/credential-jwt",
     "@veramo/credential-w3c": "file:../veramo/packages/credential-w3c",
     "@veramo/did-jwt": "file:../veramo/packages/did-jwt",
@@ -20,6 +21,7 @@
     "@veramo/did-resolver": "file:../veramo/packages/did-resolver",
     "@veramo/key-manager": "file:../veramo/packages/key-manager",
     "@veramo/kms-web3": "file:../veramo/packages/kms-web3",
+    "buffer": "^6.0.3",
     "did-resolver": "^4.1.0",
     "ethers": "^6.13.2",
     "ethr-did-resolver": "^10.1.10",
