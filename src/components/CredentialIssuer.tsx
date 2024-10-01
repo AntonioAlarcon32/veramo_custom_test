@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Dropdown from './Dropdown';
+import { issueCredential } from '../utils';
 
-const CredentialIssuer = ({ agent, selectedKey, issueCredential }) => {
+const CredentialIssuer = ({ agent, selectedKey, setSelectedAlgorithm, setVerifiableCredential }) => {
   const [inputSubject, setInputSubject] = useState('');
   const [signatureType, setSignatureType] = useState('');
 
@@ -12,11 +13,12 @@ const CredentialIssuer = ({ agent, selectedKey, issueCredential }) => {
 
   const handleDropdownSelect = (option) => {
     setSignatureType(option.value);
+    setSelectedAlgorithm(option.value);
   };
 
-  const handleIssueCredential = () => {
-    console.log(inputSubject, signatureType);
-    issueCredential(inputSubject, signatureType);
+  const handleIssueCredential = async () => {
+    const credential = await issueCredential(agent, selectedKey, inputSubject, signatureType);
+    setVerifiableCredential(credential);
   };
 
   const options = [

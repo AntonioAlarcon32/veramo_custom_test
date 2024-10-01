@@ -1,9 +1,23 @@
-import React from 'react';
+import { useState } from 'react';
+import { validatePresentation } from '../utils'
 
-const PresentationValidator = ({ validatePresentation, presentationValidated }) => {
+const PresentationValidator = ({ agent, verifiablePresentation }) => {
+
+  const [presentationValidated, setPresentationValidated] = useState<string>("");
+
+  const handleValidatePresentation = async () => {
+    const result = await validatePresentation(agent, verifiablePresentation);
+    if (result === true) {
+      setPresentationValidated("Credential is valid")
+    } else {
+      setPresentationValidated("Credential is not valid")
+    }
+
+  }
+
   return (
     <div>
-      <button onClick={validatePresentation}>Validate Presentation</button>
+      <button onClick={handleValidatePresentation}>Validate Presentation</button>
       <h3>Presentation validation result</h3>
       <h4>{presentationValidated}</h4>
     </div>

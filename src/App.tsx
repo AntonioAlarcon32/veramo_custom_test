@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { MetaMaskInpageProvider } from "@metamask/providers";
 import { Web3KeyManagementSystem } from '@veramo/kms-web3';
 import { KeyManager } from '@veramo/key-manager';
-import { ManagedKeyInfo, IDIDManager, IResolver, createAgent, ICredentialPlugin, IDataStore, IKeyManager, TAgent, VerifiableCredential, VerifiablePresentation } from '@veramo/core';
+import { ManagedKeyInfo, IDIDManager, IResolver, createAgent, ICredentialPlugin, IDataStore, IKeyManager, TAgent, VerifiableCredential, VerifiablePresentation, DIDResolutionResult } from '@veramo/core';
 import { DIDManager, MemoryDIDStore } from '@veramo/did-manager';
 import { MemoryKeyStore } from '@veramo/key-manager';
 import { EthrDIDProvider } from '@veramo/did-provider-ethr';
@@ -13,7 +13,7 @@ import { CredentialPlugin } from '@veramo/credential-w3c';
 import { CredentialProviderEIP712 } from '@veramo/credential-eip712';
 import { Buffer } from 'buffer';
 import { CredentialProviderEip712JWT } from 'credential-eip712jwt'
-import { createAppKit, useAppKit, CaipNetwork, useAppKitProvider, useAppKitAccount } from '@reown/appkit/react'
+import { createAppKit } from '@reown/appkit/react'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 import { mainnet, sepolia } from '@reown/appkit/networks'
 import WalletConnection from './components/WalletConnection';
@@ -25,6 +25,7 @@ import CredentialValidator from './components/CredentialValidator';
 import PresentationCreator from './components/PresentationCreator';
 import PresentationDisplay from './components/PresentationDisplay';
 import PresentationValidator from './components/PresentationValidator';
+import { ConfiguredAgent, getDidDocument } from './utils';
 
 
 declare global {
@@ -35,8 +36,6 @@ declare global {
 }
 
 window.Buffer = Buffer;
-
-type ConfiguredAgent = TAgent<IDIDManager & IResolver & ICredentialPlugin & IDataStore & IKeyManager>;
 
 // 1. Get projectId
 const projectId: string = import.meta.env.VITE_WALLETCONNECT_ID
@@ -69,30 +68,13 @@ function App() {
   const [keys, setKeys] = useState<ManagedKeyInfo[]>([]);
   const [selectedKey, setSelectedKey] = useState<ManagedKeyInfo | null>(null);
   const [agent, setAgent] = useState<ConfiguredAgent | null>(null);
-  const [inputSubject, setInputSubject] = useState('');
   const [selectedDid, setSelectedDid] = useState<string | null>(null);
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('');
   const [verifiableCredential, setVerifiableCredential] = useState<VerifiableCredential | null>(null);
-  const [signatureType, setSignatureType] = useState<string>('');
-  const [credentialValidated, setCredentialValidated] = useState<string>("");
+
   const [verifiablePresentation, setVerifiablePresentation] = useState<VerifiablePresentation | null>(null);
   const [presentationValidated, setPresentationValidated] = useState<string>("");
 
-
-  // async function connectWallet() {
-  //   if (typeof window.ethereum !== 'undefined') {
-  //     try {
-  //       await window.ethereum.request({ method: 'eth_requestAccounts' });
-  //       const provider = new BrowserProvider(window.ethereum);
-  //       const web3Kms = new Web3KeyManagementSystem({ metamask: provider });
-  //       setKms(web3Kms);
-  //       const listedKeys = await web3Kms.listKeys();
-  //       setKeys(listedKeys);
-
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //   }
-  // }
 
   const importDids = useCallback(async () => {
     if (!agent) {
@@ -186,8 +168,6 @@ function App() {
     setAgent(veramoAgent);
   }, [kms, setAgent]);
 
-
-
   useEffect(() => {
     if (kms && !agent) {
       createCustomAgent();
@@ -198,141 +178,15 @@ function App() {
   }, [kms, createCustomAgent, agent, importDids]);
 
   useEffect(() => {
-    if (selectedKey) {
-      getDidDocument();
+
+    const resolve = async () => {
+      if (selectedKey && agent) {
+        const data = await getDidDocument(agent, selectedKey);
+        setSelectedDid(JSON.stringify(data.didDocument, null, 2));
+      }
     }
-  }, [selectedKey]);
-
-  async function handleAccountSelection(key: ManagedKeyInfo) {
-    setSelectedKey(key);
-
-    console.log("Changed account to: ", key);
-  }
-
-  async function issueCredential(inputSubject: string, signatureType: string) {
-    if (!agent) {
-      throw new Error('Agent not initialized');
-    }
-
-    if (!selectedKey) {
-      throw new Error('No key selected');
-    }
-
-    if (!inputSubject) {
-      throw new Error('No input subject');
-    }
-
-    const did = `did:ethr:sepolia:${selectedKey.meta?.account.address}`;
-
-    const credential = await agent.createVerifiableCredential({
-      credential: {
-        issuer: { id: did },
-        credentialSubject: {
-          id: inputSubject,
-          alumni: true,
-          degree: "Telecom Engineer",
-          college: "EETAC",
-          university: "UPC",
-        },
-      },
-      proofFormat: signatureType,
-    });
-    console.log("Credential created")
-    setVerifiableCredential(credential);
-  }
-
-  async function validateCredential() {
-    if (!agent) {
-      throw new Error('Agent not initialized');
-    }
-
-    if (!verifiableCredential) {
-      throw new Error('No credential selected');
-    }
-
-    const result = await agent.verifyCredential({
-      credential: verifiableCredential,
-    });
-    console.log("Credential validated");
-    if (result.verified === true) {
-      setCredentialValidated("Credential is valid")
-    } else {
-      setCredentialValidated("Credential is not valid")
-    }
-  }
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputSubject(event.target.value);
-  };
-
-  const options = [
-    { value: 'EthTypedDataSignature', label: 'EthTypedDataSignature' },
-    { value: 'EthereumEip712Signature2021', label: 'EthereumEip712Signature2021' }
-  ]
-
-  const handleDropdownSelect = (option: { value: string; label: string }) => {
-    console.log('Selected option:', option);
-    setSignatureType(option.value);
-  };
-
-  async function getDidDocument() {
-    if (!agent) {
-      throw new Error('Agent not initialized');
-    }
-
-    if (!selectedKey) {
-      throw new Error('No key selected');
-    }
-
-    const did = `did:ethr:sepolia:${selectedKey.meta?.account.address}`;
-
-    const didDocument = await agent.resolveDid({ didUrl: did });
-    setSelectedDid(JSON.stringify(didDocument.didDocument, null, 2));
-  }
-
-  async function createVerifiablePresentation() {
-    if (!agent) {
-      throw new Error('Agent not initialized');
-    }
-
-    if (!selectedKey) {
-      throw new Error('No key selected');
-    }
-
-    if (!verifiableCredential) {
-      throw new Error('No verifiable credential');
-    }
-    const did = `did:ethr:sepolia:${selectedKey.meta?.account.address}`;
-    const presentation = await agent.createVerifiablePresentation({
-      presentation: {
-        holder: did,
-        verifiableCredential: [verifiableCredential],
-      },
-      proofFormat: 'EthTypedDataSignature',
-    });
-    console.log("Presentation created");
-    setVerifiablePresentation(presentation);
-  }
-
-  async function validatePresentation() {
-    if (!agent) {
-      throw new Error('Agent not initialized');
-    }
-
-    if (!verifiablePresentation) {
-      throw new Error('No presentation selected');
-    }
-
-    const result = await agent.verifyPresentation({
-      presentation: verifiablePresentation,
-    });
-    console.log("Presentation validated: ", result);
-    if (result.verified === true) {
-      setPresentationValidated("Presentation is valid")
-    } else {
-      setPresentationValidated("Presentation is not valid")
-    }
-  }
+    resolve();
+  }, [selectedKey, agent]);
 
   return <>
     <WalletConnection setKms={setKms} setKeys={setKeys} />
@@ -348,18 +202,25 @@ function App() {
     {selectedDid != null && (<CredentialIssuer
       agent={agent}
       selectedKey={selectedKey}
-      issueCredential={issueCredential}
+      setSelectedAlgorithm={setSelectedAlgorithm}
+      setVerifiableCredential={setVerifiableCredential}
     />)}
-    {verifiableCredential != null && (<CredentialDisplay verifiableCredential={verifiableCredential}/>)}
+    {verifiableCredential != null && (<CredentialDisplay verifiableCredential={verifiableCredential} />)}
     {verifiableCredential != null && (<CredentialValidator
-      validateCredential={validateCredential}
-      credentialValidated={credentialValidated}
+      agent={agent}
+      verifiableCredential={verifiableCredential}
     />)}
-    {verifiableCredential != null && <PresentationCreator createVerifiablePresentation={createVerifiablePresentation} />}
-    {verifiablePresentation!= null && <PresentationDisplay verifiablePresentation={verifiablePresentation} />}
-    {verifiablePresentation!= null && <PresentationValidator
-      validatePresentation={validatePresentation}
-      presentationValidated={presentationValidated}
+    {verifiableCredential != null && <PresentationCreator
+      agent={agent}
+      selectedAlgorithm={selectedAlgorithm}
+      selectedKey={selectedKey}
+      verifiableCredential={verifiableCredential}
+      setVerifiablePresentation={setVerifiablePresentation}
+    />}
+    {verifiablePresentation != null && <PresentationDisplay verifiablePresentation={verifiablePresentation} />}
+    {verifiablePresentation != null && <PresentationValidator
+      agent={agent}
+      verifiablePresentation={verifiablePresentation}
     />}
   </>
 
