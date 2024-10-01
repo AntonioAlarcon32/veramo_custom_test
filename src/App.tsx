@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { BrowserProvider } from 'ethers';
 import { MetaMaskInpageProvider } from "@metamask/providers";
 import { Web3KeyManagementSystem } from '@veramo/kms-web3';
 import { KeyManager } from '@veramo/key-manager';
@@ -11,10 +10,22 @@ import { DIDResolverPlugin } from '@veramo/did-resolver';
 import { getResolver as getEthrDidResolver } from "ethr-did-resolver";
 import { Resolver } from 'did-resolver';
 import { CredentialPlugin } from '@veramo/credential-w3c';
-import { CredentialProviderJWT } from '@veramo/credential-jwt';
-import Dropdown from './Dropdown';
 import { CredentialProviderEIP712 } from '@veramo/credential-eip712';
 import { Buffer } from 'buffer';
+import { CredentialProviderEip712JWT } from 'credential-eip712jwt'
+import { createAppKit, useAppKit, CaipNetwork, useAppKitProvider, useAppKitAccount } from '@reown/appkit/react'
+import { EthersAdapter } from '@reown/appkit-adapter-ethers'
+import { mainnet, sepolia } from '@reown/appkit/networks'
+import WalletConnection from './components/WalletConnection';
+import AccountSelector from './components/AccountSelector';
+import DidDisplay from './components/DidDisplay';
+import CredentialIssuer from './components/CredentialIssuer';
+import CredentialDisplay from './components/CredentialDisplay';
+import CredentialValidator from './components/CredentialValidator';
+import PresentationCreator from './components/PresentationCreator';
+import PresentationDisplay from './components/PresentationDisplay';
+import PresentationValidator from './components/PresentationValidator';
+
 
 declare global {
   interface Window {
@@ -26,6 +37,31 @@ declare global {
 window.Buffer = Buffer;
 
 type ConfiguredAgent = TAgent<IDIDManager & IResolver & ICredentialPlugin & IDataStore & IKeyManager>;
+
+// 1. Get projectId
+const projectId: string = import.meta.env.VITE_WALLETCONNECT_ID
+
+// 2. Set the networks
+const networks = [sepolia, mainnet];
+console.log("Networks: ", networks);
+
+const metadata = {
+  name: 'test',
+  description: 'My Website description',
+  url: 'http://localhost:5173', // origin must match your domain & subdomain
+  icons: ['https://avatars.mywebsite.com/']
+}
+
+// 4. Create a AppKit instance
+createAppKit({
+  adapters: [new EthersAdapter()],
+  networks,
+  metadata,
+  projectId,
+  features: {
+    analytics: false // Optional - defaults to your Cloud configuration
+  }
+})
 
 function App() {
 
@@ -40,21 +76,23 @@ function App() {
   const [credentialValidated, setCredentialValidated] = useState<string>("");
   const [verifiablePresentation, setVerifiablePresentation] = useState<VerifiablePresentation | null>(null);
   const [presentationValidated, setPresentationValidated] = useState<string>("");
-  async function connectWallet() {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const provider = new BrowserProvider(window.ethereum);
-        const web3Kms = new Web3KeyManagementSystem({ metamask: provider });
-        setKms(web3Kms);
-        const listedKeys = await web3Kms.listKeys();
-        setKeys(listedKeys);
 
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  }
+
+  // async function connectWallet() {
+  //   if (typeof window.ethereum !== 'undefined') {
+  //     try {
+  //       await window.ethereum.request({ method: 'eth_requestAccounts' });
+  //       const provider = new BrowserProvider(window.ethereum);
+  //       const web3Kms = new Web3KeyManagementSystem({ metamask: provider });
+  //       setKms(web3Kms);
+  //       const listedKeys = await web3Kms.listKeys();
+  //       setKeys(listedKeys);
+
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   }
+  // }
 
   const importDids = useCallback(async () => {
     if (!agent) {
@@ -139,7 +177,7 @@ function App() {
           })),
         }),
         new CredentialPlugin({
-          issuers: [new CredentialProviderJWT(), new CredentialProviderEIP712()]
+          issuers: [new CredentialProviderEIP712(), new CredentialProviderEip712JWT()]
         })
       ]
     });
@@ -171,7 +209,7 @@ function App() {
     console.log("Changed account to: ", key);
   }
 
-  async function issueCredential() {
+  async function issueCredential(inputSubject: string, signatureType: string) {
     if (!agent) {
       throw new Error('Agent not initialized');
     }
@@ -261,10 +299,6 @@ function App() {
       throw new Error('No key selected');
     }
 
-    if (!inputSubject) {
-      throw new Error('No input subject');
-    }
-
     if (!verifiableCredential) {
       throw new Error('No verifiable credential');
     }
@@ -274,7 +308,7 @@ function App() {
         holder: did,
         verifiableCredential: [verifiableCredential],
       },
-      proofFormat: signatureType,
+      proofFormat: 'EthTypedDataSignature',
     });
     console.log("Presentation created");
     setVerifiablePresentation(presentation);
@@ -301,58 +335,32 @@ function App() {
   }
 
   return <>
-    <button onClick={connectWallet}>Connect to MetaMask</button>
+    <WalletConnection setKms={setKms} setKeys={setKeys} />
     <div style={{ marginBottom: '20px' }}></div>
     {keys.length > 0 && (
-      <div>
-        <h3>Select an account:</h3>
-        {keys.map((key) => (
-          <div key={key.kid}>
-            <input
-              type="radio"
-              id={key.kid}
-              name="account"
-              value={key.kid}
-              checked={selectedKey?.kid === key.kid}
-              onChange={() => handleAccountSelection(key)}
-            />
-            <label htmlFor={key.kid}>{key.kid}</label>
-          </div>
-        ))}
-      </div>
+      <AccountSelector
+        keys={keys}
+        selectedKey={selectedKey}
+        setSelectedKey={setSelectedKey}
+      />
     )}
-    <h3>Selected DID</h3>
-    <div><pre>{<p>{selectedDid}</p>}</pre></div>
-    <div>
-      <input
-        type="text"
-        value={inputSubject}
-        onChange={handleInputChange}
-        placeholder="Enter text here"
-      />
-      <Dropdown
-        options={options}
-        onSelect={handleDropdownSelect}
-        placeholder="Choose signature type"
-      />
-      <button onClick={issueCredential}>Issue Credential</button>
-      <div style={{ marginBottom: '20px' }}></div>
-    </div>
-    <h3>Created Verifiable Credential</h3>
-    <div><pre>{<p>{JSON.stringify(verifiableCredential, null, 4)}</p>}</pre></div>
-
-    <button onClick={validateCredential}>Validate Credential</button>
-    <div style={{ marginBottom: '20px' }}></div>
-    <h3>Credential validation result</h3>
-    <div>{<h4>{credentialValidated}</h4>}</div>
-    <div style={{ marginBottom: '20px' }}></div>
-    <button onClick={createVerifiablePresentation}>Create Presentation</button>
-    <h3>Created Verifiable Presentation</h3>
-    <div><pre>{<p>{JSON.stringify(verifiablePresentation, null, 4)}</p>}</pre></div>
-    <button onClick={validatePresentation}>Validate Presentation</button>
-    <h3>Presentation validation result</h3>
-    <div>{<h4>{presentationValidated}</h4>}</div>
-    <div style={{ marginBottom: '20px' }}></div>
+    {selectedDid != null && (<DidDisplay selectedDid={selectedDid} />)}
+    {selectedDid != null && (<CredentialIssuer
+      agent={agent}
+      selectedKey={selectedKey}
+      issueCredential={issueCredential}
+    />)}
+    {verifiableCredential != null && (<CredentialDisplay verifiableCredential={verifiableCredential}/>)}
+    {verifiableCredential != null && (<CredentialValidator
+      validateCredential={validateCredential}
+      credentialValidated={credentialValidated}
+    />)}
+    {verifiableCredential != null && <PresentationCreator createVerifiablePresentation={createVerifiablePresentation} />}
+    {verifiablePresentation!= null && <PresentationDisplay verifiablePresentation={verifiablePresentation} />}
+    {verifiablePresentation!= null && <PresentationValidator
+      validatePresentation={validatePresentation}
+      presentationValidated={presentationValidated}
+    />}
   </>
 
 }
