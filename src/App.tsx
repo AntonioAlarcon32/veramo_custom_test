@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Web3KeyManagementSystem } from '@veramo/kms-web3';
 import { KeyManager } from '@veramo/key-manager';
-import { ManagedKeyInfo, IDIDManager, IResolver, createAgent, ICredentialPlugin, IDataStore, IKeyManager, VerifiableCredential, VerifiablePresentation } from '@veramo/core';
+import { ManagedKeyInfo, IDIDManager, IResolver, createAgent, ICredentialPlugin, IDataStore, IKeyManager, VerifiableCredential, VerifiablePresentation, DIDResolutionResult, DIDDocument } from '@veramo/core';
 import { DIDManager, MemoryDIDStore } from '@veramo/did-manager';
 import { MemoryKeyStore } from '@veramo/key-manager';
 import { EthrDIDProvider } from '@veramo/did-provider-ethr';
@@ -70,8 +70,8 @@ function App() {
   const [keys, setKeys] = useState<ManagedKeyInfo[]>([]);
   const [selectedKey, setSelectedKey] = useState<ManagedKeyInfo | null>(null);
   const [agent, setAgent] = useState<ConfiguredAgent | null>(null);
-  const [selectedDid, setSelectedDid] = useState<string | null>(null);
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('');
+  const [selectedDidDocument, setSelectedDidDocument] = useState<DIDDocument | null>(null);
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string | null>(null);
   const [verifiableCredential, setVerifiableCredential] = useState<VerifiableCredential | null>(null);
   const [verifiablePresentation, setVerifiablePresentation] = useState<VerifiablePresentation | null>(null);
   const [browserProvider, setBrowserProvider] = useState<BrowserProvider | null>(null);
@@ -183,8 +183,9 @@ function App() {
 
     const resolve = async () => {
       if (selectedKey && agent) {
-        const data = await getDidDocument(agent, selectedKey);
-        setSelectedDid(JSON.stringify(data.didDocument, null, 2));
+        const data: DIDResolutionResult = await getDidDocument(agent, selectedKey);
+        console.log("DID Document: ", data.didDocument);
+        setSelectedDidDocument(data.didDocument);
       }
     }
     resolve();
@@ -204,8 +205,8 @@ function App() {
         setSelectedKey={setSelectedKey}
       />
     )}
-    {selectedDid != null && (<DidDisplay selectedDid={selectedDid} />)}
-    {selectedDid != null && (<CredentialIssuer
+    {selectedDidDocument != null && (<DidDisplay selectedDidDocument={selectedDidDocument} />)}
+    {selectedDidDocument != null && (<CredentialIssuer
       agent={agent}
       selectedKey={selectedKey}
       setSelectedAlgorithm={setSelectedAlgorithm}

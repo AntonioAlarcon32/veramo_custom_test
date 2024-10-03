@@ -6,7 +6,7 @@ interface PresentationCreatorProps {
   agent: ConfiguredAgent | null;
   selectedKey: ManagedKeyInfo | null;
   verifiableCredential: VerifiableCredential | null;
-  selectedAlgorithm: string;
+  selectedAlgorithm: string | null;
   setVerifiablePresentation: React.Dispatch<React.SetStateAction<VerifiablePresentation | null>>;
 }
 
@@ -36,7 +36,7 @@ const PresentationCreator: React.FC<PresentationCreatorProps> = ({
       return;
     }
 
-    if (selectedAlgorithm === '') {
+    if (!selectedAlgorithm) {
       setError('No algorithm selected');
       return;
     }

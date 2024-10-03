@@ -7,7 +7,7 @@ import { ManagedKeyInfo, VerifiableCredential } from '@veramo/core';
 interface CredentialIssuerProps {
   agent: ConfiguredAgent | null;
   selectedKey: ManagedKeyInfo | null;
-  setSelectedAlgorithm: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedAlgorithm: React.Dispatch<React.SetStateAction<string | null>>;
   setVerifiableCredential: React.Dispatch<React.SetStateAction<VerifiableCredential | null>>;
 }
 
