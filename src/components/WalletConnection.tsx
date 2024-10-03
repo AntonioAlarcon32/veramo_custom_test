@@ -9,9 +9,10 @@ import { Eip1193Provider } from 'ethers';
 interface WalletConnectionProps {
   setKms: React.Dispatch<React.SetStateAction<Web3KeyManagementSystem | null>>
   setKeys: React.Dispatch<React.SetStateAction<ManagedKeyInfo[]>>
+  setBrowserProvider: React.Dispatch<React.SetStateAction<BrowserProvider | null>>
 }
 
-const WalletConnection: React.FC<WalletConnectionProps> = ({ setKms, setKeys }) => {
+const WalletConnection: React.FC<WalletConnectionProps> = ({ setKms, setKeys, setBrowserProvider }) => {
   const { walletProvider } = useAppKitProvider(sepolia.chainNamespace);
 
   const { open } = useAppKit();
@@ -35,6 +36,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ setKms, setKeys }) 
       console.log("Connected: ", isConnected);
 
       const provider = new BrowserProvider(walletProvider as Eip1193Provider);
+      setBrowserProvider(provider);
       const web3Kms = new Web3KeyManagementSystem({ eip1193: provider });
       setKms(web3Kms);
       const listedKeys = await web3Kms.listKeys();
@@ -43,7 +45,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ setKms, setKeys }) 
     } catch (error) {
       console.error('Failed to connect wallet:', error);
     }
-  }, [walletProvider, setKms, setKeys, isConnected, walletInfo, address, status]);
+  }, [walletProvider, setKms, setKeys, isConnected, walletInfo, address, status, setBrowserProvider]);
 
   useEffect(() => {
     if (isConnected && !isKmsCreated) {

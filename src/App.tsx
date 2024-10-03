@@ -25,6 +25,7 @@ import PresentationCreator from './components/PresentationCreator';
 import PresentationDisplay from './components/PresentationDisplay';
 import PresentationValidator from './components/PresentationValidator';
 import { ConfiguredAgent, getDidDocument } from './utils';
+import { BrowserProvider } from 'ethers';
 
 
 declare global {
@@ -73,6 +74,7 @@ function App() {
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('');
   const [verifiableCredential, setVerifiableCredential] = useState<VerifiableCredential | null>(null);
   const [verifiablePresentation, setVerifiablePresentation] = useState<VerifiablePresentation | null>(null);
+  const [browserProvider, setBrowserProvider] = useState<BrowserProvider | null>(null);
 
 
   const importDids = useCallback(async () => {
@@ -115,7 +117,7 @@ function App() {
     }
 
 
-    if (!kms) {
+    if (!kms || !browserProvider) {
       throw new Error('KMS not initialized');
     }
     const veramoAgent = createAgent<IDIDManager & IResolver & ICredentialPlugin & IDataStore & IKeyManager>({
@@ -133,12 +135,12 @@ function App() {
             'did:ethr': new EthrDIDProvider({
               defaultKms: 'web3',
               registry: registries['mainnet'],
-              rpcUrl: 'https://mainnet.infura.io/v3/707f7fa6bee6474196a78bf7622503f5'
+              web3Provider: browserProvider
             }),
             'did:ethr:sepolia': new EthrDIDProvider({
               defaultKms: 'web3',
               registry: registries['sepolia'],
-              rpcUrl: 'https://sepolia.infura.io/v3/707f7fa6bee6474196a78bf7622503f5'
+              web3Provider: browserProvider
             })
           }
         }),
@@ -148,12 +150,12 @@ function App() {
               {
                 name: 'mainnet',
                 registry: registries['mainnet'],
-                rpcUrl: 'https://mainnet.infura.io/v3/707f7fa6bee6474196a78bf7622503f5'
+                provider: browserProvider
               },
               {
                 name: 'sepolia',
                 registry: registries['sepolia'],
-                rpcUrl: 'https://sepolia.infura.io/v3/707f7fa6bee6474196a78bf7622503f5'
+                provider: browserProvider
               }
             ]
           })),
@@ -166,7 +168,7 @@ function App() {
     console.log("Agent created: ", veramoAgent);
 
     setAgent(veramoAgent);
-  }, [kms, setAgent]);
+  }, [kms, setAgent, browserProvider]);
 
   useEffect(() => {
     if (kms && !agent) {
@@ -189,7 +191,11 @@ function App() {
   }, [selectedKey, agent]);
 
   return <>
-    <WalletConnection setKms={setKms} setKeys={setKeys} />
+    <WalletConnection 
+    setKms={setKms} 
+    setKeys={setKeys}
+    setBrowserProvider={setBrowserProvider}
+    />
     <div style={{ marginBottom: '20px' }}></div>
     {keys.length > 0 && (
       <AccountSelector
