@@ -1,4 +1,4 @@
-import { ManagedKeyInfo } from "@veramo/core";
+import { ManagedKeyInfo } from '@veramo/core';
 
 interface AccountSelectorProps {
   keys: ManagedKeyInfo[];
@@ -9,7 +9,7 @@ interface AccountSelectorProps {
 const AccountSelector: React.FC<AccountSelectorProps> = ({ keys, selectedKey, setSelectedKey }) => {
   const handleAccountSelection = (key: ManagedKeyInfo) => {
     setSelectedKey(key);
-    console.log("Changed account to: ", key);
+    console.log('Changed account to: ', key);
   };
 
   return (

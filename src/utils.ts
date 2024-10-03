@@ -1,4 +1,5 @@
 import {
+  DIDResolutionResult,
   ICredentialPlugin,
   IDataStore,
   IDIDManager,
@@ -8,17 +9,17 @@ import {
   TAgent,
   VerifiableCredential,
   VerifiablePresentation,
-} from "@veramo/core";
+} from '@veramo/core';
 
 type ConfiguredAgent = TAgent<IDIDManager & IResolver & ICredentialPlugin & IDataStore & IKeyManager>;
 
 async function getDidDocument(agent: ConfiguredAgent, selectedKey: ManagedKeyInfo): Promise<DIDResolutionResult> {
   if (!agent) {
-    throw new Error("Agent not initialized");
+    throw new Error('Agent not initialized');
   }
 
   if (!selectedKey) {
-    throw new Error("No key selected");
+    throw new Error('No key selected');
   }
 
   const did = `did:ethr:sepolia:${selectedKey.meta?.account.address}`;
@@ -32,22 +33,22 @@ async function issueCredential(
   agent: ConfiguredAgent,
   selectedKey: ManagedKeyInfo,
   inputSubject: string,
-  selectedAlgorithm: string,
+  selectedAlgorithm: string
 ): Promise<VerifiableCredential> {
   if (!agent) {
-    throw new Error("Agent not initialized");
+    throw new Error('Agent not initialized');
   }
 
   if (!selectedKey) {
-    throw new Error("No key selected");
+    throw new Error('No key selected');
   }
 
   if (!inputSubject) {
-    throw new Error("No input subject");
+    throw new Error('No input subject');
   }
 
-  if (selectedAlgorithm === "") {
-    throw new Error("No algorithm selected");
+  if (selectedAlgorithm === '') {
+    throw new Error('No algorithm selected');
   }
 
   const did = `did:ethr:sepolia:${selectedKey.meta?.account.address}`;
@@ -58,27 +59,27 @@ async function issueCredential(
       credentialSubject: {
         id: inputSubject,
         alumni: true,
-        degree: "Telecom Engineer",
-        college: "EETAC",
-        university: "UPC",
+        degree: 'Telecom Engineer',
+        college: 'EETAC',
+        university: 'UPC',
       },
     },
     proofFormat: selectedAlgorithm,
   });
-  console.log("Credential created");
+  console.log('Credential created');
   return credential;
 }
 
 async function validateCredential(
   agent: ConfiguredAgent,
-  verifiableCredential: VerifiableCredential,
+  verifiableCredential: VerifiableCredential
 ): Promise<boolean> {
   if (!agent) {
-    throw new Error("Agent not initialized");
+    throw new Error('Agent not initialized');
   }
 
   if (!verifiableCredential) {
-    throw new Error("No credential selected");
+    throw new Error('No credential selected');
   }
 
   const result = await agent.verifyCredential({
@@ -91,22 +92,22 @@ async function createVerifiablePresentation(
   agent: ConfiguredAgent,
   selectedKey: ManagedKeyInfo,
   verifiableCredential: VerifiableCredential,
-  selectedAlgorithm: string,
+  selectedAlgorithm: string
 ) {
   if (!agent) {
-    throw new Error("Agent not initialized");
+    throw new Error('Agent not initialized');
   }
 
   if (!selectedKey) {
-    throw new Error("No key selected");
+    throw new Error('No key selected');
   }
 
   if (!verifiableCredential) {
-    throw new Error("No verifiable credential");
+    throw new Error('No verifiable credential');
   }
 
-  if (selectedAlgorithm === "") {
-    throw new Error("No algorithm selected");
+  if (selectedAlgorithm === '') {
+    throw new Error('No algorithm selected');
   }
 
   const did = `did:ethr:sepolia:${selectedKey.meta?.account.address}`;
@@ -123,14 +124,14 @@ async function createVerifiablePresentation(
 
 async function validatePresentation(
   agent: ConfiguredAgent,
-  verifiablePresentation: VerifiablePresentation,
+  verifiablePresentation: VerifiablePresentation
 ): Promise<boolean> {
   if (!agent) {
-    throw new Error("Agent not initialized");
+    throw new Error('Agent not initialized');
   }
 
   if (!verifiablePresentation) {
-    throw new Error("No presentation selected");
+    throw new Error('No presentation selected');
   }
 
   const result = await agent.verifyPresentation({

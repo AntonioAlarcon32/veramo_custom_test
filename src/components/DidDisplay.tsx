@@ -1,4 +1,4 @@
-import { DIDDocument } from "@veramo/core";
+import { DIDDocument } from '@veramo/core';
 
 interface DidDisplayProps {
   selectedDidDocument: DIDDocument | null;

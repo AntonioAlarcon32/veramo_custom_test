@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { VerifiablePresentation } from "@veramo/core";
+import { useState } from 'react';
+import { VerifiablePresentation } from '@veramo/core';
 
 interface PresentationDisplayProps {
   verifiablePresentation: VerifiablePresentation | null;
@@ -16,7 +16,7 @@ const PresentationDisplay: React.FC<PresentationDisplayProps> = ({ verifiablePre
           setIsCopied(true);
           setTimeout(() => setIsCopied(false), 2000); // Reset after 2 seconds
         })
-        .catch((err) => console.error("Failed to copy: ", err));
+        .catch((err) => console.error('Failed to copy: ', err));
     }
   };
 
@@ -34,10 +34,10 @@ const PresentationDisplay: React.FC<PresentationDisplayProps> = ({ verifiablePre
             <button
               onClick={handleCopyToClipboard}
               className={`${
-                isCopied ? "bg-green-500" : "bg-blue-500 hover:bg-blue-600"
+                isCopied ? 'bg-green-500' : 'bg-blue-500 hover:bg-blue-600'
               } text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out`}
             >
-              {isCopied ? "Copied!" : "Copy to Clipboard"}
+              {isCopied ? 'Copied!' : 'Copy to Clipboard'}
             </button>
           </div>
         </>

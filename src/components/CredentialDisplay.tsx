@@ -1,4 +1,4 @@
-import { VerifiableCredential } from "@veramo/core";
+import { VerifiableCredential } from '@veramo/core';
 
 interface CredentialDisplayProps {
   verifiableCredential: VerifiableCredential;

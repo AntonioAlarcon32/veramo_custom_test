@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { Web3KeyManagementSystem } from "@veramo/kms-web3";
-import { KeyManager } from "@veramo/key-manager";
+import { useCallback, useEffect, useState } from 'react';
+import { Web3KeyManagementSystem } from '@veramo/kms-web3';
+import { KeyManager } from '@veramo/key-manager';
 import {
   ManagedKeyInfo,
   IDIDManager,
@@ -13,31 +13,31 @@ import {
   VerifiablePresentation,
   DIDResolutionResult,
   DIDDocument,
-} from "@veramo/core";
-import { DIDManager, MemoryDIDStore } from "@veramo/did-manager";
-import { MemoryKeyStore } from "@veramo/key-manager";
-import { EthrDIDProvider } from "@veramo/did-provider-ethr";
-import { DIDResolverPlugin } from "@veramo/did-resolver";
-import { getResolver as getEthrDidResolver } from "ethr-did-resolver";
-import { Resolver } from "did-resolver";
-import { CredentialPlugin } from "@veramo/credential-w3c";
-import { CredentialProviderEIP712 } from "@veramo/credential-eip712";
-import { Buffer } from "buffer";
-import { CredentialProviderEip712JWT } from "credential-eip712jwt";
-import { createAppKit } from "@reown/appkit/react";
-import { EthersAdapter } from "@reown/appkit-adapter-ethers";
-import { mainnet, sepolia } from "@reown/appkit/networks";
-import WalletConnection from "./components/WalletConnection";
-import AccountSelector from "./components/AccountSelector";
-import DidDisplay from "./components/DidDisplay";
-import CredentialIssuer from "./components/CredentialIssuer";
-import CredentialDisplay from "./components/CredentialDisplay";
-import CredentialValidator from "./components/CredentialValidator";
-import PresentationCreator from "./components/PresentationCreator";
-import PresentationDisplay from "./components/PresentationDisplay";
-import PresentationValidator from "./components/PresentationValidator";
-import { ConfiguredAgent, getDidDocument } from "./utils";
-import { BrowserProvider } from "ethers";
+} from '@veramo/core';
+import { DIDManager, MemoryDIDStore } from '@veramo/did-manager';
+import { MemoryKeyStore } from '@veramo/key-manager';
+import { EthrDIDProvider } from '@veramo/did-provider-ethr';
+import { DIDResolverPlugin } from '@veramo/did-resolver';
+import { getResolver as getEthrDidResolver } from 'ethr-did-resolver';
+import { Resolver } from 'did-resolver';
+import { CredentialPlugin } from '@veramo/credential-w3c';
+import { CredentialProviderEIP712 } from '@veramo/credential-eip712';
+import { Buffer } from 'buffer';
+import { CredentialProviderEip712JWT } from 'credential-eip712jwt';
+import { createAppKit } from '@reown/appkit/react';
+import { EthersAdapter } from '@reown/appkit-adapter-ethers';
+import { mainnet, sepolia } from '@reown/appkit/networks';
+import WalletConnection from './components/WalletConnection';
+import AccountSelector from './components/AccountSelector';
+import DidDisplay from './components/DidDisplay';
+import CredentialIssuer from './components/CredentialIssuer';
+import CredentialDisplay from './components/CredentialDisplay';
+import CredentialValidator from './components/CredentialValidator';
+import PresentationCreator from './components/PresentationCreator';
+import PresentationDisplay from './components/PresentationDisplay';
+import PresentationValidator from './components/PresentationValidator';
+import { ConfiguredAgent, getDidDocument } from './utils';
+import { BrowserProvider } from 'ethers';
 
 declare global {
   interface Window {
@@ -52,13 +52,13 @@ const projectId: string = import.meta.env.VITE_WALLETCONNECT_ID;
 
 // 2. Set the networks
 const networks = [sepolia, mainnet];
-console.log("Networks: ", networks);
+console.log('Networks: ', networks);
 
 const metadata = {
-  name: "test",
-  description: "My Website description",
-  url: "http://localhost:5173", // origin must match your domain & subdomain
-  icons: ["https://avatars.mywebsite.com/"],
+  name: 'test',
+  description: 'My Website description',
+  url: 'http://localhost:5173', // origin must match your domain & subdomain
+  icons: ['https://avatars.mywebsite.com/'],
 };
 
 // 4. Create a AppKit instance
@@ -88,11 +88,11 @@ function App() {
 
   const importDids = useCallback(async () => {
     if (!agent) {
-      throw new Error("Agent not initialized");
+      throw new Error('Agent not initialized');
     }
 
     if (!keys) {
-      throw new Error("No keys found");
+      throw new Error('No keys found');
     }
 
     keys.forEach(async (key) => {
@@ -100,21 +100,21 @@ function App() {
       const importedDid = await agent.didManagerImport({
         did,
         controllerKeyId: key.kid,
-        provider: "did:ethr:sepolia",
+        provider: 'did:ethr:sepolia',
         keys: [
           {
             kid: key.kid,
-            type: "Secp256k1",
-            kms: "web3",
+            type: 'Secp256k1',
+            kms: 'web3',
             publicKeyHex: key.publicKeyHex,
             meta: key.meta,
-            privateKeyHex: "",
+            privateKeyHex: '',
           },
         ],
       });
-      console.log("DID created: ", importedDid);
+      console.log('DID created: ', importedDid);
       const test = await agent.resolveDid({ didUrl: did });
-      console.log("DID resolved: ", test);
+      console.log('DID resolved: ', test);
     });
   }, [agent, keys]);
 
@@ -123,12 +123,12 @@ function App() {
     const keyStore = new MemoryKeyStore();
 
     const registries = {
-      mainnet: "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b",
-      sepolia: "0x03d5003bf0e79c5f5223588f347eba39afbc3818",
+      mainnet: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b',
+      sepolia: '0x03d5003bf0e79c5f5223588f347eba39afbc3818',
     };
 
     if (!kms || !browserProvider) {
-      throw new Error("KMS not initialized");
+      throw new Error('KMS not initialized');
     }
     const veramoAgent = createAgent<IDIDManager & IResolver & ICredentialPlugin & IDataStore & IKeyManager>({
       plugins: [
@@ -140,16 +140,16 @@ function App() {
         }),
         new DIDManager({
           store: didStore,
-          defaultProvider: "did:ethr",
+          defaultProvider: 'did:ethr',
           providers: {
-            "did:ethr": new EthrDIDProvider({
-              defaultKms: "web3",
-              registry: registries["mainnet"],
+            'did:ethr': new EthrDIDProvider({
+              defaultKms: 'web3',
+              registry: registries['mainnet'],
               web3Provider: browserProvider,
             }),
-            "did:ethr:sepolia": new EthrDIDProvider({
-              defaultKms: "web3",
-              registry: registries["sepolia"],
+            'did:ethr:sepolia': new EthrDIDProvider({
+              defaultKms: 'web3',
+              registry: registries['sepolia'],
               web3Provider: browserProvider,
             }),
           },
@@ -159,17 +159,17 @@ function App() {
             getEthrDidResolver({
               networks: [
                 {
-                  name: "mainnet",
-                  registry: registries["mainnet"],
+                  name: 'mainnet',
+                  registry: registries['mainnet'],
                   provider: browserProvider,
                 },
                 {
-                  name: "sepolia",
-                  registry: registries["sepolia"],
+                  name: 'sepolia',
+                  registry: registries['sepolia'],
                   provider: browserProvider,
                 },
               ],
-            }),
+            })
           ),
         }),
         new CredentialPlugin({
@@ -177,7 +177,7 @@ function App() {
         }),
       ],
     });
-    console.log("Agent created: ", veramoAgent);
+    console.log('Agent created: ', veramoAgent);
 
     setAgent(veramoAgent);
   }, [kms, setAgent, browserProvider]);
@@ -195,7 +195,7 @@ function App() {
     const resolve = async () => {
       if (selectedKey && agent) {
         const data: DIDResolutionResult = await getDidDocument(agent, selectedKey);
-        console.log("DID Document: ", data.didDocument);
+        console.log('DID Document: ', data.didDocument);
         setSelectedDidDocument(data.didDocument);
       }
     };
@@ -205,7 +205,7 @@ function App() {
   return (
     <>
       <WalletConnection setKms={setKms} setKeys={setKeys} setBrowserProvider={setBrowserProvider} />
-      <div style={{ marginBottom: "20px" }}></div>
+      <div style={{ marginBottom: '20px' }}></div>
       {keys.length > 0 && <AccountSelector keys={keys} selectedKey={selectedKey} setSelectedKey={setSelectedKey} />}
       {selectedDidDocument != null && <DidDisplay selectedDidDocument={selectedDidDocument} />}
       {selectedDidDocument != null && (

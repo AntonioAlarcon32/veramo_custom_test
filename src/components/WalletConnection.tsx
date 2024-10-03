@@ -1,10 +1,10 @@
-import { useAppKit, useAppKitAccount, useAppKitProvider, useWalletInfo } from "@reown/appkit/react";
-import { sepolia } from "@reown/appkit/networks";
-import { BrowserProvider } from "ethers";
-import { Web3KeyManagementSystem } from "@veramo/kms-web3";
-import { ManagedKeyInfo } from "@veramo/core";
-import { useEffect, useState, useCallback } from "react";
-import { Eip1193Provider } from "ethers";
+import { useAppKit, useAppKitAccount, useAppKitProvider, useWalletInfo } from '@reown/appkit/react';
+import { sepolia } from '@reown/appkit/networks';
+import { BrowserProvider } from 'ethers';
+import { Web3KeyManagementSystem } from '@veramo/kms-web3';
+import { ManagedKeyInfo } from '@veramo/core';
+import { useEffect, useState, useCallback } from 'react';
+import { Eip1193Provider } from 'ethers';
 
 interface WalletConnectionProps {
   setKms: React.Dispatch<React.SetStateAction<Web3KeyManagementSystem | null>>;
@@ -24,16 +24,16 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ setKms, setKeys, se
     try {
       await open();
     } catch (error) {
-      console.error("Failed to connect wallet:", error);
+      console.error('Failed to connect wallet:', error);
     }
   };
 
   const connectWallet = useCallback(async () => {
     try {
-      console.log("Wallet Info: ", walletInfo);
-      console.log("Account: ", address);
-      console.log("Status: ", status);
-      console.log("Connected: ", isConnected);
+      console.log('Wallet Info: ', walletInfo);
+      console.log('Account: ', address);
+      console.log('Status: ', status);
+      console.log('Connected: ', isConnected);
 
       const provider = new BrowserProvider(walletProvider as Eip1193Provider);
       setBrowserProvider(provider);
@@ -43,14 +43,14 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ setKms, setKeys, se
       setKeys(listedKeys);
       setIsKmsCreated(true);
     } catch (error) {
-      console.error("Failed to connect wallet:", error);
+      console.error('Failed to connect wallet:', error);
     }
   }, [walletProvider, setKms, setKeys, isConnected, walletInfo, address, status, setBrowserProvider]);
 
   useEffect(() => {
     if (isConnected && !isKmsCreated) {
       connectWallet();
-      console.log("Connected wallet: ", walletInfo);
+      console.log('Connected wallet: ', walletInfo);
     }
   }, [isConnected, isKmsCreated, walletInfo, connectWallet]);
 

@@ -1,8 +1,8 @@
-import { useState } from "react";
-import Dropdown from "./Dropdown";
-import { Option } from "./Dropdown";
-import { ConfiguredAgent, issueCredential } from "../utils";
-import { ManagedKeyInfo, VerifiableCredential } from "@veramo/core";
+import { useState } from 'react';
+import Dropdown from './Dropdown';
+import { Option } from './Dropdown';
+import { ConfiguredAgent, issueCredential } from '../utils';
+import { ManagedKeyInfo, VerifiableCredential } from '@veramo/core';
 
 interface CredentialIssuerProps {
   agent: ConfiguredAgent | null;
@@ -17,12 +17,12 @@ const CredentialIssuer: React.FC<CredentialIssuerProps> = ({
   setSelectedAlgorithm,
   setVerifiableCredential,
 }) => {
-  const [inputSubject, setInputSubject] = useState("");
-  const [signatureType, setSignatureType] = useState("");
+  const [inputSubject, setInputSubject] = useState('');
+  const [signatureType, setSignatureType] = useState('');
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputSubject(event.target.value);
-    console.log("Subject:", event.target.value);
+    console.log('Subject:', event.target.value);
   };
 
   const handleDropdownSelect = (option: Option) => {
@@ -32,11 +32,11 @@ const CredentialIssuer: React.FC<CredentialIssuerProps> = ({
 
   const handleIssueCredential = async () => {
     if (!agent) {
-      console.error("No agent selected");
+      console.error('No agent selected');
       return;
     }
     if (!selectedKey) {
-      console.error("No key selected");
+      console.error('No key selected');
       return;
     }
     const credential = await issueCredential(agent, selectedKey, inputSubject, signatureType);
@@ -44,10 +44,10 @@ const CredentialIssuer: React.FC<CredentialIssuerProps> = ({
   };
 
   const options = [
-    { value: "EthTypedDataSignature", label: "EthTypedDataSignature" },
+    { value: 'EthTypedDataSignature', label: 'EthTypedDataSignature' },
     {
-      value: "EthereumEip712Signature2021",
-      label: "EthereumEip712Signature2021",
+      value: 'EthereumEip712Signature2021',
+      label: 'EthereumEip712Signature2021',
     },
   ];
 
