@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { MetaMaskInpageProvider } from "@metamask/providers";
 import { Web3KeyManagementSystem } from '@veramo/kms-web3';
 import { KeyManager } from '@veramo/key-manager';
-import { ManagedKeyInfo, IDIDManager, IResolver, createAgent, ICredentialPlugin, IDataStore, IKeyManager, TAgent, VerifiableCredential, VerifiablePresentation, DIDResolutionResult } from '@veramo/core';
+import { ManagedKeyInfo, IDIDManager, IResolver, createAgent, ICredentialPlugin, IDataStore, IKeyManager, VerifiableCredential, VerifiablePresentation } from '@veramo/core';
 import { DIDManager, MemoryDIDStore } from '@veramo/did-manager';
 import { MemoryKeyStore } from '@veramo/key-manager';
 import { EthrDIDProvider } from '@veramo/did-provider-ethr';
@@ -30,7 +29,6 @@ import { ConfiguredAgent, getDidDocument } from './utils';
 
 declare global {
   interface Window {
-    ethereum?: MetaMaskInpageProvider
     Buffer: typeof Buffer;
   }
 }
@@ -58,7 +56,10 @@ createAppKit({
   metadata,
   projectId,
   features: {
-    analytics: false // Optional - defaults to your Cloud configuration
+    analytics: false, // Optional - defaults to your Cloud configuration
+    swaps: false, // Optional - defaults to your Cloud configuration
+    onramp: false, // Optional - defaults to your Cloud configuration
+    history: false, // Optional - defaults to your Cloud configuration
   }
 })
 
@@ -71,9 +72,7 @@ function App() {
   const [selectedDid, setSelectedDid] = useState<string | null>(null);
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('');
   const [verifiableCredential, setVerifiableCredential] = useState<VerifiableCredential | null>(null);
-
   const [verifiablePresentation, setVerifiablePresentation] = useState<VerifiablePresentation | null>(null);
-  const [presentationValidated, setPresentationValidated] = useState<string>("");
 
 
   const importDids = useCallback(async () => {
@@ -89,6 +88,7 @@ function App() {
       const did = `did:ethr:sepolia:${key.meta?.account.address}`;
       const importedDid = await agent.didManagerImport({
         did,
+        controllerKeyId: key.kid,
         provider: 'did:ethr:sepolia',
         keys: [{
           kid: key.kid,
