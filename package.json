@@ -28,7 +28,8 @@
     "buffer": "^6.0.3",
     "credential-eip712jwt": "file:../credential-eip712jwt",
     "did-resolver": "^4.1.0",
-    "ethers": "^6.13.2",
+    "ethers": "^6.13.3",
+    "ethr-did": "^3.0.21",
     "ethr-did-resolver": "^10.1.10",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

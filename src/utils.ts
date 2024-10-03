@@ -1,4 +1,6 @@
-import { ICredentialPlugin, IDataStore, IDIDManager, IKeyManager, IResolver, ManagedKeyInfo, TAgent, VerifiableCredential, VerifiablePresentation } from "@veramo/core";
+import { DIDResolutionResult, ICredentialPlugin, IDataStore, IDIDManager, IKeyManager, IResolver, ManagedKeyInfo, TAgent, VerifiableCredential, VerifiablePresentation } from "@veramo/core";
+import { ethers } from 'ethers';
+
 
 type ConfiguredAgent = TAgent<IDIDManager & IResolver & ICredentialPlugin & IDataStore & IKeyManager>;
 
@@ -116,4 +118,44 @@ async function validatePresentation(agent: ConfiguredAgent, verifiablePresentati
     return result.verified
 }
 
-export { type ConfiguredAgent, issueCredential, validateCredential, createVerifiablePresentation, validatePresentation, getDidDocument }
+async function changeOwner(agent: ConfiguredAgent, ownerDid: string, newOwnerAddress:string) {
+    if (!agent) {
+         console.error('Agent not initialized');
+         return;
+     }
+
+     if (!ownerDid) {
+        throw new Error('No owner did selected');
+        
+    }
+    console.log(`ownerDid: ${ownerDid}`)
+ 
+     if (!ethers.isAddress(newOwnerAddress)) {
+         console.error('La dirección proporcionada no es válida');
+         return;
+     }
+    
+     try {
+  
+          const documentUpdate = {
+            controller: [newOwnerAddress], // Lista con la nueva dirección como controlador
+          };
+          console.log(`newowner: ${newOwnerAddress}`);
+          console.log(`documentupdate: ${documentUpdate}`);
+           const result = await agent.didManagerUpdate({
+            did: ownerDid,      
+            document: documentUpdate,
+            options: {},
+
+        });
+ 
+         console.log(`DID ethereum account address updated to: ${newOwnerAddress}`);
+         console.log(`result: ${result}`);
+         return result;
+     } catch (error) {
+         console.error('Error al actualizar el owner del DID:', error);
+     }
+ }
+
+export { type ConfiguredAgent, issueCredential, validateCredential, createVerifiablePresentation, validatePresentation, getDidDocument, changeOwner }
+

@@ -1,6 +1,6 @@
 import { useAppKitProvider } from '@reown/appkit/react';
 import { sepolia } from '@reown/appkit/networks';
-import { BrowserProvider } from 'ethers';
+import { BrowserProvider, Eip1193Provider } from 'ethers';
 import { Web3KeyManagementSystem } from '@veramo/kms-web3';
 
 const WalletConnection = ({ setKms, setKeys }) => {
@@ -8,8 +8,8 @@ const WalletConnection = ({ setKms, setKeys }) => {
 
   const connectWallet = async () => {
     try {
-      const provider = new BrowserProvider(walletProvider);
-      const web3Kms = new Web3KeyManagementSystem({ metamask: provider });
+      const provider = new BrowserProvider(walletProvider as Eip1193Provider);
+      const web3Kms = new Web3KeyManagementSystem({ eip1193: provider });
       setKms(web3Kms);
       const listedKeys = await web3Kms.listKeys();
       setKeys(listedKeys);

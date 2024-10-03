@@ -1,37 +1,36 @@
-import { useCallback, useEffect, useState } from 'react'
-import { MetaMaskInpageProvider } from "@metamask/providers";
-import { Web3KeyManagementSystem } from '@veramo/kms-web3';
-import { KeyManager } from '@veramo/key-manager';
-import { ManagedKeyInfo, IDIDManager, IResolver, createAgent, ICredentialPlugin, IDataStore, IKeyManager, TAgent, VerifiableCredential, VerifiablePresentation, DIDResolutionResult } from '@veramo/core';
+import { createAgent, DIDDocument, ICredentialPlugin, IDataStore, IDIDManager, IKeyManager, IResolver, ManagedKeyInfo, VerifiableCredential, VerifiablePresentation } from '@veramo/core';
 import { DIDManager, MemoryDIDStore } from '@veramo/did-manager';
-import { MemoryKeyStore } from '@veramo/key-manager';
 import { EthrDIDProvider } from '@veramo/did-provider-ethr';
-import { DIDResolverPlugin } from '@veramo/did-resolver';
-import { getResolver as getEthrDidResolver } from "ethr-did-resolver";
-import { Resolver } from 'did-resolver';
-import { CredentialPlugin } from '@veramo/credential-w3c';
+import { KeyManager, MemoryKeyStore } from '@veramo/key-manager';
+import { Web3KeyManagementSystem } from '@veramo/kms-web3';
+import { useCallback, useEffect, useState } from 'react';
+
+import { EthersAdapter } from '@reown/appkit-adapter-ethers';
+import { mainnet, sepolia } from '@reown/appkit/networks';
+import { createAppKit } from '@reown/appkit/react';
 import { CredentialProviderEIP712 } from '@veramo/credential-eip712';
+import { CredentialPlugin } from '@veramo/credential-w3c';
+import { DIDResolverPlugin } from '@veramo/did-resolver';
 import { Buffer } from 'buffer';
-import { CredentialProviderEip712JWT } from 'credential-eip712jwt'
-import { createAppKit } from '@reown/appkit/react'
-import { EthersAdapter } from '@reown/appkit-adapter-ethers'
-import { mainnet, sepolia } from '@reown/appkit/networks'
-import WalletConnection from './components/WalletConnection';
+import { CredentialProviderEip712JWT } from 'credential-eip712jwt';
+import { Resolver } from 'did-resolver';
+import { getResolver as getEthrDidResolver } from "ethr-did-resolver";
 import AccountSelector from './components/AccountSelector';
-import DidDisplay from './components/DidDisplay';
-import CredentialIssuer from './components/CredentialIssuer';
 import CredentialDisplay from './components/CredentialDisplay';
+import CredentialIssuer from './components/CredentialIssuer';
 import CredentialValidator from './components/CredentialValidator';
+import DidDisplay from './components/DidDisplay';
 import PresentationCreator from './components/PresentationCreator';
 import PresentationDisplay from './components/PresentationDisplay';
 import PresentationValidator from './components/PresentationValidator';
-import { ConfiguredAgent, getDidDocument } from './utils';
+import WalletConnection from './components/WalletConnection';
+import { changeOwner, ConfiguredAgent, getDidDocument } from './utils';
 
 
 declare global {
   interface Window {
-    ethereum?: MetaMaskInpageProvider
-    Buffer: typeof Buffer;
+    // ethereum?: MetaMaskInpageProvider
+    Buffer: typeof Buffer
   }
 }
 
@@ -68,12 +67,13 @@ function App() {
   const [keys, setKeys] = useState<ManagedKeyInfo[]>([]);
   const [selectedKey, setSelectedKey] = useState<ManagedKeyInfo | null>(null);
   const [agent, setAgent] = useState<ConfiguredAgent | null>(null);
-  const [selectedDid, setSelectedDid] = useState<string | null>(null);
+  const [newOwner, setNewOwner] = useState<string>('');
+  const [selectedDidDoc, setSelectedDidDoc] = useState<string | null>(null);
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('');
   const [verifiableCredential, setVerifiableCredential] = useState<VerifiableCredential | null>(null);
 
   const [verifiablePresentation, setVerifiablePresentation] = useState<VerifiablePresentation | null>(null);
-  const [presentationValidated, setPresentationValidated] = useState<string>("");
+  // const [presentationValidated, setPresentationValidated] = useState<string>("");
 
 
   const importDids = useCallback(async () => {
@@ -133,12 +133,12 @@ function App() {
             'did:ethr': new EthrDIDProvider({
               defaultKms: 'web3',
               registry: registries['mainnet'],
-              rpcUrl: 'https://mainnet.infura.io/v3/707f7fa6bee6474196a78bf7622503f5'
+              rpcUrl: 'https://cloudflare-eth.com'
             }),
             'did:ethr:sepolia': new EthrDIDProvider({
               defaultKms: 'web3',
               registry: registries['sepolia'],
-              rpcUrl: 'https://sepolia.infura.io/v3/707f7fa6bee6474196a78bf7622503f5'
+              rpcUrl: 'https://ethereum-sepolia-rpc.publicnode.com'
             })
           }
         }),
@@ -182,11 +182,20 @@ function App() {
     const resolve = async () => {
       if (selectedKey && agent) {
         const data = await getDidDocument(agent, selectedKey);
-        setSelectedDid(JSON.stringify(data.didDocument, null, 2));
+        setSelectedDidDoc(JSON.stringify(data.didDocument, null, 2));
       }
     }
     resolve();
   }, [selectedKey, agent]);
+
+  const handleUpdateOwner = async () => {
+    if (agent && newOwner && selectedDidDoc) {
+      const didDoc = JSON.parse(selectedDidDoc) as DIDDocument
+      await changeOwner(agent, didDoc.id, newOwner);
+    } else {
+      console.error('Agente, DID o nuevo propietario no están configurados');
+    }
+  };
 
   return <>
     <WalletConnection setKms={setKms} setKeys={setKeys} />
@@ -198,8 +207,8 @@ function App() {
         setSelectedKey={setSelectedKey}
       />
     )}
-    {selectedDid != null && (<DidDisplay selectedDid={selectedDid} />)}
-    {selectedDid != null && (<CredentialIssuer
+    {selectedDidDoc != null && (<DidDisplay selectedDidDoc={selectedDidDoc} />)}
+    {selectedDidDoc != null && (<CredentialIssuer
       agent={agent}
       selectedKey={selectedKey}
       setSelectedAlgorithm={setSelectedAlgorithm}
@@ -221,9 +230,24 @@ function App() {
     {verifiablePresentation != null && <PresentationValidator
       agent={agent}
       verifiablePresentation={verifiablePresentation}
+    />
+    }
+    {selectedDidDoc != null &&
+    <input 
+      type="text" 
+      placeholder="Nuevo propietario (dirección ETH)" 
+      value={newOwner} 
+      onChange={(e) => setNewOwner(e.target.value)} 
     />}
-  </>
-
+    
+    {/* Botón para ejecutar el cambio de propietario */}
+    <button onClick={handleUpdateOwner}>
+      Actualizar Propietario
+    </button>
+  
+    </>
 }
+    
+
 
 export default App;
