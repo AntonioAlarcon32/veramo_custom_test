@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import Dropdown from './Dropdown';
-import { Option } from './Dropdown';
-import { ConfiguredAgent, issueCredential } from '../utils';
-import { ManagedKeyInfo, VerifiableCredential } from '@veramo/core';
+import { useState } from "react";
+import Dropdown from "./Dropdown";
+import { Option } from "./Dropdown";
+import { ConfiguredAgent, issueCredential } from "../utils";
+import { ManagedKeyInfo, VerifiableCredential } from "@veramo/core";
 
 interface CredentialIssuerProps {
   agent: ConfiguredAgent | null;
@@ -11,13 +11,18 @@ interface CredentialIssuerProps {
   setVerifiableCredential: React.Dispatch<React.SetStateAction<VerifiableCredential | null>>;
 }
 
-const CredentialIssuer: React.FC<CredentialIssuerProps> = ({ agent, selectedKey, setSelectedAlgorithm, setVerifiableCredential }) => {
-  const [inputSubject, setInputSubject] = useState('');
-  const [signatureType, setSignatureType] = useState('');
+const CredentialIssuer: React.FC<CredentialIssuerProps> = ({
+  agent,
+  selectedKey,
+  setSelectedAlgorithm,
+  setVerifiableCredential,
+}) => {
+  const [inputSubject, setInputSubject] = useState("");
+  const [signatureType, setSignatureType] = useState("");
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputSubject(event.target.value);
-    console.log('Subject:', event.target.value);
+    console.log("Subject:", event.target.value);
   };
 
   const handleDropdownSelect = (option: Option) => {
@@ -26,13 +31,12 @@ const CredentialIssuer: React.FC<CredentialIssuerProps> = ({ agent, selectedKey,
   };
 
   const handleIssueCredential = async () => {
-
     if (!agent) {
-      console.error('No agent selected');
+      console.error("No agent selected");
       return;
     }
     if (!selectedKey) {
-      console.error('No key selected');
+      console.error("No key selected");
       return;
     }
     const credential = await issueCredential(agent, selectedKey, inputSubject, signatureType);
@@ -40,8 +44,11 @@ const CredentialIssuer: React.FC<CredentialIssuerProps> = ({ agent, selectedKey,
   };
 
   const options = [
-    { value: 'EthTypedDataSignature', label: 'EthTypedDataSignature' },
-    { value: 'EthereumEip712Signature2021', label: 'EthereumEip712Signature2021' }
+    { value: "EthTypedDataSignature", label: "EthTypedDataSignature" },
+    {
+      value: "EthereumEip712Signature2021",
+      label: "EthereumEip712Signature2021",
+    },
   ];
 
   return (
@@ -62,14 +69,8 @@ const CredentialIssuer: React.FC<CredentialIssuerProps> = ({ agent, selectedKey,
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Signature Type
-          </label>
-          <Dropdown
-            options={options}
-            onSelect={handleDropdownSelect}
-            placeholder="Choose signature type"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">Signature Type</label>
+          <Dropdown options={options} onSelect={handleDropdownSelect} placeholder="Choose signature type" />
         </div>
         <button
           onClick={handleIssueCredential}

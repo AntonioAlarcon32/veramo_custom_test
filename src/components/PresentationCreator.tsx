@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { ManagedKeyInfo, VerifiableCredential, VerifiablePresentation } from "@veramo/core";
 import { ConfiguredAgent, createVerifiablePresentation } from "../utils";
 
@@ -15,29 +15,29 @@ const PresentationCreator: React.FC<PresentationCreatorProps> = ({
   selectedKey,
   verifiableCredential,
   selectedAlgorithm,
-  setVerifiablePresentation
+  setVerifiablePresentation,
 }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleCreatePresentation = async () => {
     if (!agent) {
-      setError('No agent selected');
+      setError("No agent selected");
       return;
     }
 
     if (!selectedKey) {
-      setError('No key selected');
+      setError("No key selected");
       return;
     }
 
     if (!verifiableCredential) {
-      setError('No credential selected');
+      setError("No credential selected");
       return;
     }
 
     if (!selectedAlgorithm) {
-      setError('No algorithm selected');
+      setError("No algorithm selected");
       return;
     }
 
@@ -45,14 +45,19 @@ const PresentationCreator: React.FC<PresentationCreatorProps> = ({
     setError(null);
 
     try {
-      const presentation = await createVerifiablePresentation(agent, selectedKey, verifiableCredential, selectedAlgorithm);
+      const presentation = await createVerifiablePresentation(
+        agent,
+        selectedKey,
+        verifiableCredential,
+        selectedAlgorithm,
+      );
       setVerifiablePresentation(presentation);
     } catch (err) {
-      setError('Failed to create presentation: ' + (err instanceof Error ? err.message : String(err)));
+      setError("Failed to create presentation: " + (err instanceof Error ? err.message : String(err)));
     } finally {
       setIsCreating(false);
     }
-  }
+  };
 
   return (
     <div className="bg-white shadow-md rounded-lg p-6">
@@ -62,11 +67,11 @@ const PresentationCreator: React.FC<PresentationCreatorProps> = ({
         disabled={isCreating || !verifiableCredential || !selectedAlgorithm}
         className={`w-full ${
           isCreating || !verifiableCredential || !selectedAlgorithm
-            ? 'bg-gray-300 cursor-not-allowed'
-            : 'bg-blue-500 hover:bg-blue-600'
+            ? "bg-gray-300 cursor-not-allowed"
+            : "bg-blue-500 hover:bg-blue-600"
         } text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out`}
       >
-        {isCreating ? 'Creating Presentation...' : 'Create Presentation'}
+        {isCreating ? "Creating Presentation..." : "Create Presentation"}
       </button>
       {error && (
         <div className="mt-4 p-4 bg-red-100 text-red-800 rounded-md">

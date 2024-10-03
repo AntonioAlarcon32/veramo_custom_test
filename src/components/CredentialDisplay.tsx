@@ -14,7 +14,7 @@ const CredentialDisplay: React.FC<CredentialDisplayProps> = ({ verifiableCredent
         </pre>
       </div>
       <div className="mt-4 flex justify-end">
-        <button 
+        <button
           onClick={() => navigator.clipboard.writeText(JSON.stringify(verifiableCredential, null, 2))}
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
         >

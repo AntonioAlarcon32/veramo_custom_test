@@ -1,32 +1,43 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Web3KeyManagementSystem } from '@veramo/kms-web3';
-import { KeyManager } from '@veramo/key-manager';
-import { ManagedKeyInfo, IDIDManager, IResolver, createAgent, ICredentialPlugin, IDataStore, IKeyManager, VerifiableCredential, VerifiablePresentation, DIDResolutionResult, DIDDocument } from '@veramo/core';
-import { DIDManager, MemoryDIDStore } from '@veramo/did-manager';
-import { MemoryKeyStore } from '@veramo/key-manager';
-import { EthrDIDProvider } from '@veramo/did-provider-ethr';
-import { DIDResolverPlugin } from '@veramo/did-resolver';
+import { useCallback, useEffect, useState } from "react";
+import { Web3KeyManagementSystem } from "@veramo/kms-web3";
+import { KeyManager } from "@veramo/key-manager";
+import {
+  ManagedKeyInfo,
+  IDIDManager,
+  IResolver,
+  createAgent,
+  ICredentialPlugin,
+  IDataStore,
+  IKeyManager,
+  VerifiableCredential,
+  VerifiablePresentation,
+  DIDResolutionResult,
+  DIDDocument,
+} from "@veramo/core";
+import { DIDManager, MemoryDIDStore } from "@veramo/did-manager";
+import { MemoryKeyStore } from "@veramo/key-manager";
+import { EthrDIDProvider } from "@veramo/did-provider-ethr";
+import { DIDResolverPlugin } from "@veramo/did-resolver";
 import { getResolver as getEthrDidResolver } from "ethr-did-resolver";
-import { Resolver } from 'did-resolver';
-import { CredentialPlugin } from '@veramo/credential-w3c';
-import { CredentialProviderEIP712 } from '@veramo/credential-eip712';
-import { Buffer } from 'buffer';
-import { CredentialProviderEip712JWT } from 'credential-eip712jwt'
-import { createAppKit } from '@reown/appkit/react'
-import { EthersAdapter } from '@reown/appkit-adapter-ethers'
-import { mainnet, sepolia } from '@reown/appkit/networks'
-import WalletConnection from './components/WalletConnection';
-import AccountSelector from './components/AccountSelector';
-import DidDisplay from './components/DidDisplay';
-import CredentialIssuer from './components/CredentialIssuer';
-import CredentialDisplay from './components/CredentialDisplay';
-import CredentialValidator from './components/CredentialValidator';
-import PresentationCreator from './components/PresentationCreator';
-import PresentationDisplay from './components/PresentationDisplay';
-import PresentationValidator from './components/PresentationValidator';
-import { ConfiguredAgent, getDidDocument } from './utils';
-import { BrowserProvider } from 'ethers';
-
+import { Resolver } from "did-resolver";
+import { CredentialPlugin } from "@veramo/credential-w3c";
+import { CredentialProviderEIP712 } from "@veramo/credential-eip712";
+import { Buffer } from "buffer";
+import { CredentialProviderEip712JWT } from "credential-eip712jwt";
+import { createAppKit } from "@reown/appkit/react";
+import { EthersAdapter } from "@reown/appkit-adapter-ethers";
+import { mainnet, sepolia } from "@reown/appkit/networks";
+import WalletConnection from "./components/WalletConnection";
+import AccountSelector from "./components/AccountSelector";
+import DidDisplay from "./components/DidDisplay";
+import CredentialIssuer from "./components/CredentialIssuer";
+import CredentialDisplay from "./components/CredentialDisplay";
+import CredentialValidator from "./components/CredentialValidator";
+import PresentationCreator from "./components/PresentationCreator";
+import PresentationDisplay from "./components/PresentationDisplay";
+import PresentationValidator from "./components/PresentationValidator";
+import { ConfiguredAgent, getDidDocument } from "./utils";
+import { BrowserProvider } from "ethers";
 
 declare global {
   interface Window {
@@ -37,18 +48,18 @@ declare global {
 window.Buffer = Buffer;
 
 // 1. Get projectId
-const projectId: string = import.meta.env.VITE_WALLETCONNECT_ID
+const projectId: string = import.meta.env.VITE_WALLETCONNECT_ID;
 
 // 2. Set the networks
 const networks = [sepolia, mainnet];
 console.log("Networks: ", networks);
 
 const metadata = {
-  name: 'test',
-  description: 'My Website description',
-  url: 'http://localhost:5173', // origin must match your domain & subdomain
-  icons: ['https://avatars.mywebsite.com/']
-}
+  name: "test",
+  description: "My Website description",
+  url: "http://localhost:5173", // origin must match your domain & subdomain
+  icons: ["https://avatars.mywebsite.com/"],
+};
 
 // 4. Create a AppKit instance
 createAppKit({
@@ -61,11 +72,10 @@ createAppKit({
     swaps: false, // Optional - defaults to your Cloud configuration
     onramp: false, // Optional - defaults to your Cloud configuration
     history: false, // Optional - defaults to your Cloud configuration
-  }
-})
+  },
+});
 
 function App() {
-
   const [kms, setKms] = useState<Web3KeyManagementSystem | null>(null);
   const [keys, setKeys] = useState<ManagedKeyInfo[]>([]);
   const [selectedKey, setSelectedKey] = useState<ManagedKeyInfo | null>(null);
@@ -76,14 +86,13 @@ function App() {
   const [verifiablePresentation, setVerifiablePresentation] = useState<VerifiablePresentation | null>(null);
   const [browserProvider, setBrowserProvider] = useState<BrowserProvider | null>(null);
 
-
   const importDids = useCallback(async () => {
     if (!agent) {
-      throw new Error('Agent not initialized');
+      throw new Error("Agent not initialized");
     }
 
     if (!keys) {
-      throw new Error('No keys found');
+      throw new Error("No keys found");
     }
 
     keys.forEach(async (key) => {
@@ -91,18 +100,20 @@ function App() {
       const importedDid = await agent.didManagerImport({
         did,
         controllerKeyId: key.kid,
-        provider: 'did:ethr:sepolia',
-        keys: [{
-          kid: key.kid,
-          type: 'Secp256k1',
-          kms: 'web3',
-          publicKeyHex: key.publicKeyHex,
-          meta: key.meta,
-          privateKeyHex: "",
-        }]
+        provider: "did:ethr:sepolia",
+        keys: [
+          {
+            kid: key.kid,
+            type: "Secp256k1",
+            kms: "web3",
+            publicKeyHex: key.publicKeyHex,
+            meta: key.meta,
+            privateKeyHex: "",
+          },
+        ],
       });
       console.log("DID created: ", importedDid);
-      const test = await agent.resolveDid({ didUrl: did })
+      const test = await agent.resolveDid({ didUrl: did });
       console.log("DID resolved: ", test);
     });
   }, [agent, keys]);
@@ -112,58 +123,59 @@ function App() {
     const keyStore = new MemoryKeyStore();
 
     const registries = {
-      mainnet: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b',
-      sepolia: '0x03d5003bf0e79c5f5223588f347eba39afbc3818'
-    }
-
+      mainnet: "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b",
+      sepolia: "0x03d5003bf0e79c5f5223588f347eba39afbc3818",
+    };
 
     if (!kms || !browserProvider) {
-      throw new Error('KMS not initialized');
+      throw new Error("KMS not initialized");
     }
     const veramoAgent = createAgent<IDIDManager & IResolver & ICredentialPlugin & IDataStore & IKeyManager>({
       plugins: [
         new KeyManager({
           store: keyStore,
           kms: {
-            web3: kms
-          }
+            web3: kms,
+          },
         }),
         new DIDManager({
           store: didStore,
-          defaultProvider: 'did:ethr',
+          defaultProvider: "did:ethr",
           providers: {
-            'did:ethr': new EthrDIDProvider({
-              defaultKms: 'web3',
-              registry: registries['mainnet'],
-              web3Provider: browserProvider
+            "did:ethr": new EthrDIDProvider({
+              defaultKms: "web3",
+              registry: registries["mainnet"],
+              web3Provider: browserProvider,
             }),
-            'did:ethr:sepolia': new EthrDIDProvider({
-              defaultKms: 'web3',
-              registry: registries['sepolia'],
-              web3Provider: browserProvider
-            })
-          }
+            "did:ethr:sepolia": new EthrDIDProvider({
+              defaultKms: "web3",
+              registry: registries["sepolia"],
+              web3Provider: browserProvider,
+            }),
+          },
         }),
         new DIDResolverPlugin({
-          resolver: new Resolver(getEthrDidResolver({
-            networks: [
-              {
-                name: 'mainnet',
-                registry: registries['mainnet'],
-                provider: browserProvider
-              },
-              {
-                name: 'sepolia',
-                registry: registries['sepolia'],
-                provider: browserProvider
-              }
-            ]
-          })),
+          resolver: new Resolver(
+            getEthrDidResolver({
+              networks: [
+                {
+                  name: "mainnet",
+                  registry: registries["mainnet"],
+                  provider: browserProvider,
+                },
+                {
+                  name: "sepolia",
+                  registry: registries["sepolia"],
+                  provider: browserProvider,
+                },
+              ],
+            }),
+          ),
         }),
         new CredentialPlugin({
-          issuers: [new CredentialProviderEIP712(), new CredentialProviderEip712JWT()]
-        })
-      ]
+          issuers: [new CredentialProviderEIP712(), new CredentialProviderEip712JWT()],
+        }),
+      ],
     });
     console.log("Agent created: ", veramoAgent);
 
@@ -180,57 +192,49 @@ function App() {
   }, [kms, createCustomAgent, agent, importDids]);
 
   useEffect(() => {
-
     const resolve = async () => {
       if (selectedKey && agent) {
         const data: DIDResolutionResult = await getDidDocument(agent, selectedKey);
         console.log("DID Document: ", data.didDocument);
         setSelectedDidDocument(data.didDocument);
       }
-    }
+    };
     resolve();
   }, [selectedKey, agent]);
 
-  return <>
-    <WalletConnection 
-    setKms={setKms} 
-    setKeys={setKeys}
-    setBrowserProvider={setBrowserProvider}
-    />
-    <div style={{ marginBottom: '20px' }}></div>
-    {keys.length > 0 && (
-      <AccountSelector
-        keys={keys}
-        selectedKey={selectedKey}
-        setSelectedKey={setSelectedKey}
-      />
-    )}
-    {selectedDidDocument != null && (<DidDisplay selectedDidDocument={selectedDidDocument} />)}
-    {selectedDidDocument != null && (<CredentialIssuer
-      agent={agent}
-      selectedKey={selectedKey}
-      setSelectedAlgorithm={setSelectedAlgorithm}
-      setVerifiableCredential={setVerifiableCredential}
-    />)}
-    {verifiableCredential != null && (<CredentialDisplay verifiableCredential={verifiableCredential} />)}
-    {verifiableCredential != null && (<CredentialValidator
-      agent={agent}
-      verifiableCredential={verifiableCredential}
-    />)}
-    {verifiableCredential != null && <PresentationCreator
-      agent={agent}
-      selectedAlgorithm={selectedAlgorithm}
-      selectedKey={selectedKey}
-      verifiableCredential={verifiableCredential}
-      setVerifiablePresentation={setVerifiablePresentation}
-    />}
-    {verifiablePresentation != null && <PresentationDisplay verifiablePresentation={verifiablePresentation} />}
-    {verifiablePresentation != null && <PresentationValidator
-      agent={agent}
-      verifiablePresentation={verifiablePresentation}
-    />}
-  </>
-
+  return (
+    <>
+      <WalletConnection setKms={setKms} setKeys={setKeys} setBrowserProvider={setBrowserProvider} />
+      <div style={{ marginBottom: "20px" }}></div>
+      {keys.length > 0 && <AccountSelector keys={keys} selectedKey={selectedKey} setSelectedKey={setSelectedKey} />}
+      {selectedDidDocument != null && <DidDisplay selectedDidDocument={selectedDidDocument} />}
+      {selectedDidDocument != null && (
+        <CredentialIssuer
+          agent={agent}
+          selectedKey={selectedKey}
+          setSelectedAlgorithm={setSelectedAlgorithm}
+          setVerifiableCredential={setVerifiableCredential}
+        />
+      )}
+      {verifiableCredential != null && <CredentialDisplay verifiableCredential={verifiableCredential} />}
+      {verifiableCredential != null && (
+        <CredentialValidator agent={agent} verifiableCredential={verifiableCredential} />
+      )}
+      {verifiableCredential != null && (
+        <PresentationCreator
+          agent={agent}
+          selectedAlgorithm={selectedAlgorithm}
+          selectedKey={selectedKey}
+          verifiableCredential={verifiableCredential}
+          setVerifiablePresentation={setVerifiablePresentation}
+        />
+      )}
+      {verifiablePresentation != null && <PresentationDisplay verifiablePresentation={verifiablePresentation} />}
+      {verifiablePresentation != null && (
+        <PresentationValidator agent={agent} verifiablePresentation={verifiablePresentation} />
+      )}
+    </>
+  );
 }
 
 export default App;

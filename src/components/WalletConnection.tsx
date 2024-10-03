@@ -1,32 +1,32 @@
-import { useAppKit, useAppKitAccount, useAppKitProvider, useWalletInfo } from '@reown/appkit/react';
-import { sepolia } from '@reown/appkit/networks';
-import { BrowserProvider } from 'ethers';
-import { Web3KeyManagementSystem } from '@veramo/kms-web3';
-import { ManagedKeyInfo } from '@veramo/core';
-import { useEffect, useState, useCallback } from 'react';
-import { Eip1193Provider } from 'ethers';
+import { useAppKit, useAppKitAccount, useAppKitProvider, useWalletInfo } from "@reown/appkit/react";
+import { sepolia } from "@reown/appkit/networks";
+import { BrowserProvider } from "ethers";
+import { Web3KeyManagementSystem } from "@veramo/kms-web3";
+import { ManagedKeyInfo } from "@veramo/core";
+import { useEffect, useState, useCallback } from "react";
+import { Eip1193Provider } from "ethers";
 
 interface WalletConnectionProps {
-  setKms: React.Dispatch<React.SetStateAction<Web3KeyManagementSystem | null>>
-  setKeys: React.Dispatch<React.SetStateAction<ManagedKeyInfo[]>>
-  setBrowserProvider: React.Dispatch<React.SetStateAction<BrowserProvider | null>>
+  setKms: React.Dispatch<React.SetStateAction<Web3KeyManagementSystem | null>>;
+  setKeys: React.Dispatch<React.SetStateAction<ManagedKeyInfo[]>>;
+  setBrowserProvider: React.Dispatch<React.SetStateAction<BrowserProvider | null>>;
 }
 
 const WalletConnection: React.FC<WalletConnectionProps> = ({ setKms, setKeys, setBrowserProvider }) => {
   const { walletProvider } = useAppKitProvider(sepolia.chainNamespace);
 
   const { open } = useAppKit();
-  const {walletInfo} = useWalletInfo();
-  const { address, status, isConnected } = useAppKitAccount()
-  const [ isKmsCreated, setIsKmsCreated ] = useState<boolean>(false);
+  const { walletInfo } = useWalletInfo();
+  const { address, status, isConnected } = useAppKitAccount();
+  const [isKmsCreated, setIsKmsCreated] = useState<boolean>(false);
 
   const openWalletConnect = async () => {
     try {
       await open();
     } catch (error) {
-      console.error('Failed to connect wallet:', error);
+      console.error("Failed to connect wallet:", error);
     }
-  }
+  };
 
   const connectWallet = useCallback(async () => {
     try {
@@ -43,7 +43,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ setKms, setKeys, se
       setKeys(listedKeys);
       setIsKmsCreated(true);
     } catch (error) {
-      console.error('Failed to connect wallet:', error);
+      console.error("Failed to connect wallet:", error);
     }
   }, [walletProvider, setKms, setKeys, isConnected, walletInfo, address, status, setBrowserProvider]);
 
@@ -58,7 +58,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ setKms, setKeys, se
     <div className="bg-white shadow-md rounded-lg p-6">
       <h2 className="text-2xl font-semibold mb-4 text-gray-800">Connect Your Wallet</h2>
       <div className="flex flex-col sm:flex-row justify-between items-center">
-        <button 
+        <button
           onClick={openWalletConnect}
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
         >
