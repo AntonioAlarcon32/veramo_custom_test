@@ -36,8 +36,8 @@ import CredentialValidator from './components/CredentialValidator';
 import PresentationCreator from './components/PresentationCreator';
 import PresentationDisplay from './components/PresentationDisplay';
 import PresentationValidator from './components/PresentationValidator';
-import { ConfiguredAgent, getDidDocument } from './utils';
-import { BrowserProvider } from 'ethers';
+import { addDelegate, changeOwner, ConfiguredAgent, getDidDocument } from './utils';
+import { BrowserProvider, Signer } from 'ethers';
 
 declare global {
   interface Window {
@@ -85,6 +85,10 @@ function App() {
   const [verifiableCredential, setVerifiableCredential] = useState<VerifiableCredential | null>(null);
   const [verifiablePresentation, setVerifiablePresentation] = useState<VerifiablePresentation | null>(null);
   const [browserProvider, setBrowserProvider] = useState<BrowserProvider | null>(null);
+  const [signer, setSigner] = useState<Signer | null>(null);
+  const [delegateAddress, setDelegateAddress] = useState<string>('');
+  const [expirationTime, setExpirationTime] = useState(3600);
+  
 
   const importDids = useCallback(async () => {
     if (!agent) {
@@ -162,11 +166,13 @@ function App() {
                   name: 'mainnet',
                   registry: registries['mainnet'],
                   provider: browserProvider,
+                  signer: browserProvider.getSigner(),
                 },
                 {
                   name: 'sepolia',
                   registry: registries['sepolia'],
                   provider: browserProvider,
+                  signer: browserProvider.getSigner(),
                 },
               ],
             })
@@ -201,10 +207,36 @@ function App() {
     };
     resolve();
   }, [selectedKey, agent]);
+  const handleChangeOwner = useCallback(async () => {
+    if (!browserProvider) {
+      throw new Error('Browser provider not initialized');
+    }
+
+    const newOwner = prompt('Please enter the new owner address:');
+    if (!newOwner) {
+      alert('New owner address is required');
+      return;
+    }
+    const signer = await browserProvider.getSigner();
+    const identity = `did:ethr:sepolia:${selectedKey?.meta?.account.address}`; // Assuming you want to change the owner of the selected key's DID
+    
+    changeOwner(browserProvider, agent, signer, identity, newOwner);
+  }, [browserProvider, agent, selectedKey]);
+
+  const handleAddDelegate = useCallback(async () => {
+    if (!browserProvider) {
+      throw new Error('Browser provider not initialized');
+    }
+  
+    const signer = await browserProvider.getSigner();
+    const identity = `did:ethr:sepolia:${selectedKey?.meta?.account.address}`; // Assuming you want to add a delegate to the selected key's DID
+  
+    await addDelegate(browserProvider, agent, signer, identity, delegateAddress, expirationTime);
+  }, [browserProvider, agent, selectedKey,delegateAddress,expirationTime]);
 
   return (
     <>
-      <WalletConnection setKms={setKms} setKeys={setKeys} setBrowserProvider={setBrowserProvider} />
+      <WalletConnection setKms={setKms} setKeys={setKeys} setBrowserProvider={setBrowserProvider} setSigner = {setSigner} />
       <div style={{ marginBottom: '20px' }}></div>
       {keys.length > 0 && <AccountSelector keys={keys} selectedKey={selectedKey} setSelectedKey={setSelectedKey} />}
       {selectedDidDocument != null && <DidDisplay selectedDidDocument={selectedDidDocument} />}
@@ -233,7 +265,37 @@ function App() {
       {verifiablePresentation != null && (
         <PresentationValidator agent={agent} verifiablePresentation={verifiablePresentation} />
       )}
-    </>
+      <div style={{ marginBottom: '20px' }}></div>
+      <button onClick={handleChangeOwner}>
+        Change Owner
+      </button>
+      <div style={{ marginBottom: '20px' }}></div>
+      <div>
+        <label>
+          Delegate Address:
+          <input
+            type="text"
+            value={delegateAddress}
+            onChange={(e) => setDelegateAddress(e.target.value)}
+            className="form-input mt-1 block w-full"
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          Expiration Time (seconds):
+          <input
+            type="text"
+            value={expirationTime}
+            onChange={(e) => setExpirationTime(Number(e.target.value))}
+            className="form-input mt-1 block w-full"
+          />
+        </label>
+      </div>
+      <button onClick={handleAddDelegate} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+        Add Delegate
+      </button>
+      <div style={{ marginBottom: '20px' }}></div>    </>
   );
 }
 
