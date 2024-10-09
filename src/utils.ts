@@ -204,6 +204,24 @@ export async function addDelegate(
   }
 }
 
+export async function revokeDelegate(
+  browserProvider: BrowserProvider,
+  agent: ConfiguredAgent,
+  signer: Signer,
+  identity: string,
+  delegate: string
+) {
+  if (!browserProvider || !agent || !signer || !delegate) {
+    throw new Error('Missing required parameters');
+  }
+  try {
+    const contract = new Contract(contractAddress, contractABI, signer);
+    await new EthrDidController(identity, contract, signer).revokeDelegate('sigAuth', delegate);
+    console.log('Delegate revoked:', delegate);
+  } catch (error) {
+    console.error('Error revoking delegate:', error);
+  }
+}
 
 
 export {

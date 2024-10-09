@@ -36,7 +36,7 @@ import CredentialValidator from './components/CredentialValidator';
 import PresentationCreator from './components/PresentationCreator';
 import PresentationDisplay from './components/PresentationDisplay';
 import PresentationValidator from './components/PresentationValidator';
-import { addDelegate, changeOwner, ConfiguredAgent, getDidDocument } from './utils';
+import { addDelegate, changeOwner, ConfiguredAgent, getDidDocument, revokeDelegate } from './utils';
 import { BrowserProvider, Signer } from 'ethers';
 
 declare global {
@@ -88,6 +88,7 @@ function App() {
   const [signer, setSigner] = useState<Signer | null>(null);
   const [delegateAddress, setDelegateAddress] = useState<string>('');
   const [expirationTime, setExpirationTime] = useState(3600);
+  const [revokeDelegateAddress, setRevokeDelegateAddress] = useState<string>('');
   
 
   const importDids = useCallback(async () => {
@@ -234,6 +235,22 @@ function App() {
     await addDelegate(browserProvider, agent, signer, identity, delegateAddress, expirationTime);
   }, [browserProvider, agent, selectedKey,delegateAddress,expirationTime]);
 
+  const handleRevokeDelegate = useCallback(async () => {
+    if (!browserProvider) {
+      throw new Error('Browser provider not initialized');
+    }
+
+    if (!revokeDelegateAddress) {
+      alert('Delegate address is required');
+      return;
+    }
+
+    const signer = await browserProvider.getSigner();
+    const identity = `did:ethr:sepolia:${selectedKey?.meta?.account.address}`; // Assuming you want to revoke a delegate from the selected key's DID
+
+    await revokeDelegate(browserProvider, agent, signer, identity, revokeDelegateAddress);
+    }, [browserProvider, agent, selectedKey, revokeDelegateAddress]);
+
   return (
     <>
       <WalletConnection setKms={setKms} setKeys={setKeys} setBrowserProvider={setBrowserProvider} setSigner = {setSigner} />
@@ -294,6 +311,22 @@ function App() {
       </div>
       <button onClick={handleAddDelegate} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
         Add Delegate
+      </button>
+      <div style={{ marginBottom: '20px' }}></div>
+      <div style={{ marginBottom: '20px' }}></div>
+      <div>
+        <label>
+          Revoke Delegate Address:
+          <input
+            type="text"
+            value={revokeDelegateAddress}
+            onChange={(e) => setRevokeDelegateAddress(e.target.value)}
+            className="form-input mt-1 block w-full"
+          />
+        </label>
+      </div>
+      <button onClick={handleRevokeDelegate} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+        Revoke Delegate
       </button>
       <div style={{ marginBottom: '20px' }}></div>    </>
   );
