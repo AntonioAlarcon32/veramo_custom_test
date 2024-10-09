@@ -283,9 +283,10 @@ function App() {
         <PresentationValidator agent={agent} verifiablePresentation={verifiablePresentation} />
       )}
       <div style={{ marginBottom: '20px' }}></div>
-      <button onClick={handleChangeOwner}>
+      <button onClick={handleChangeOwner}className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
         Change Owner
       </button>
+      
       <div style={{ marginBottom: '20px' }}></div>
       <div>
         <label>
@@ -294,7 +295,7 @@ function App() {
             type="text"
             value={delegateAddress}
             onChange={(e) => setDelegateAddress(e.target.value)}
-            className="form-input mt-1 block w-full"
+            className="block text-sm font-medium text-gray-700 mb-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </label>
       </div>
@@ -305,7 +306,7 @@ function App() {
             type="text"
             value={expirationTime}
             onChange={(e) => setExpirationTime(Number(e.target.value))}
-            className="form-input mt-1 block w-full"
+            className="block text-sm font-medium text-gray-700 mb-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </label>
       </div>
@@ -321,7 +322,7 @@ function App() {
             type="text"
             value={revokeDelegateAddress}
             onChange={(e) => setRevokeDelegateAddress(e.target.value)}
-            className="form-input mt-1 block w-full"
+            className="block text-sm font-medium text-gray-700 mb-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </label>
       </div>
